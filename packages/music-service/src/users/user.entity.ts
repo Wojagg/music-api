@@ -1,9 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, ObjectIdColumn } from 'typeorm';
+import { ObjectId } from 'mongodb';
 
-@Entity()
+@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @ObjectIdColumn({ name: '_id' })
+  id: ObjectId;
 
   @Column()
   name: string;
@@ -13,4 +14,7 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ default: false })
+  isAdmin: boolean;
 }
