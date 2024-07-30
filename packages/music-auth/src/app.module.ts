@@ -1,27 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { AppController } from './Controller/app.controller';
-import { AppService } from './Service/app.service';
-
 import { User } from './users/user.entity';
-
 import { config } from './config/config';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mongodb',
-      host: config.mongo.host,
-      port: config.mongo.port,
-      username: config.mongo.user,
-      password: config.mongo.password,
-      database: config.mongo.db,
+      url: `mongodb://${config.mongo.user}:${config.mongo.password}@${config.mongo.host}:${config.mongo.port}`,
       entities: [User],
       synchronize: false,
+      database: config.mongo.database,
+      authSource: config.mongo.authSource,
     }),
+    AuthModule,
+    UsersModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
