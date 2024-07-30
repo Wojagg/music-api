@@ -8,7 +8,6 @@ COPY packages/music-service/src src
 COPY packages/music-service/tsconfig.json tsconfig.json
 
 RUN npm ci
-RUN npm start
 
 EXPOSE 3000
 

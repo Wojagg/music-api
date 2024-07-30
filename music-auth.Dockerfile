@@ -8,7 +8,6 @@ COPY packages/music-auth/src src
 COPY packages/music-auth/tsconfig.json tsconfig.json
 
 RUN npm ci
-RUN npm start
 
 EXPOSE 3001
 
