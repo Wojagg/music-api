@@ -1,31 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { MongoRepository } from 'typeorm';
-import { User } from './user.entity';
-import { MongoServerError, ObjectId } from 'mongodb';
-import * as bcrypt from 'bcrypt';
+import { UserDocument } from './user.schema';
+import { MongoServerError } from 'mongodb';
+import { ObjectId } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
+import { UserRepository } from './user.repository';
 
 // TODO: Zrobić testy tego serwisu
 // Pomyśleć czy nie przerzucić dokładnego wywalania errorów pod odpowiedzi do klientów do resolverów, żeby wydzielić
 // odpowiedzialności sieciowe z tego serwisu
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private usersRepository: MongoRepository<User>,
-  ) {}
+  constructor(private mongoRepository: UserRepository) {}
 
-  async isUserAdmin(id: string): Promise<boolean> {
-    const user = await this.findOneById(id);
+  public async isAdmin(id: string): Promise<boolean> {
+    const user = await this.findById(id);
     return user.isAdmin;
   }
 
-  async findOneById(id: string): Promise<User> {
-    const user = await this.usersRepository.findOneBy({
-      _id: new ObjectId(id),
-    });
+  async findById(id: string): Promise<UserDocument> {
+    const user = await this.mongoRepository.findById(id);
 
     if (!user) {
       throw new GraphQLError("user doesn't exist", {
@@ -39,8 +33,8 @@ export class UsersService {
     return user;
   }
 
-  async findAll(): Promise<User[]> {
-    const users = await this.usersRepository.find();
+  async findAll(): Promise<UserDocument[]> {
+    const users = this.mongoRepository.findAll();
 
     if (!users) {
       throw new GraphQLError(
@@ -58,22 +52,15 @@ export class UsersService {
     return users;
   }
 
-  async createUser(
+  async create(
     username: string,
     password: string,
     isAdmin: boolean,
   ): Promise<ObjectId> {
-    const user = {
-      name: username,
-      pass: bcrypt.hashSync(password, 10),
-      isAdmin: isAdmin,
-      isActive: true,
-    };
-
-    let createdUser;
+    let userId;
 
     try {
-      createdUser = await this.usersRepository.insertOne(user);
+      userId = this.mongoRepository.create(username, password, isAdmin);
     } catch (error: unknown) {
       if (
         error instanceof MongoServerError &&
@@ -95,49 +82,40 @@ export class UsersService {
       });
     }
 
-    return createdUser.insertedId;
+    return userId;
   }
 
-  async updateUser(
+  async update(
     id: string,
     username?: string,
     password?: string,
     isAdmin?: boolean,
     isActive?: boolean,
   ): Promise<void> {
-    const mongoSetObject: Partial<User> = {};
-    if (username) mongoSetObject.name = username;
-    if (password) mongoSetObject.pass = bcrypt.hashSync(password, 10);
-    if (isActive) mongoSetObject.isActive = isActive;
-    if (isAdmin) mongoSetObject.isAdmin = isAdmin;
+    const userToUpdate = await this.findById(id);
 
-    const updateResult = await this.usersRepository.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: mongoSetObject },
-    );
-
-    // TODO: PO ZMIANIE NA MONGOOSE DODAĆ TUTAJ WYKRYWANIE CZY BYŁ KONFLIKT PODCZAS UPDATE, NA RAZIE Z TEGO CO WIDZĘ
-    // NIE MA OPCJI RZUCENIA BŁĘDEM Z updateOne DLA MONGODB Z TYPEORM
-
-    if (updateResult.modifiedCount <= 0) {
-      throw new GraphQLError(
-        'No documents were modified, check if provided id is valid',
-        {
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        },
+    try {
+      await this.mongoRepository.update(
+        userToUpdate,
+        username,
+        password,
+        isAdmin,
+        isActive,
       );
+    } catch {
+      throw new GraphQLError("update wasn't successful", {
+        extensions: {
+          code: 'CONFLICT',
+          http: { status: 409 },
+        },
+      });
     }
   }
 
-  async deleteUser(id: string): Promise<void> {
-    const deleteResult = await this.usersRepository.deleteOne({
-      _id: new ObjectId(id),
-    });
+  async delete(id: string): Promise<void> {
+    const deletedCount = await this.mongoRepository.delete(id);
 
-    if (deleteResult.deletedCount <= 0) {
+    if (deletedCount <= 0) {
       throw new GraphQLError(
         'No documents were deleted, check if provided id is valid',
         {
