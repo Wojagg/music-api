@@ -6,9 +6,6 @@ import { GraphQLError } from 'graphql';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
 import { UserRepository } from './user.repository';
 
-// TODO: Zrobić testy tego serwisu
-// Pomyśleć czy nie przerzucić dokładnego wywalania errorów pod odpowiedzi do klientów do resolverów, żeby wydzielić
-// odpowiedzialności sieciowe z tego serwisu
 @Injectable()
 export class UsersService {
   constructor(private mongoRepository: UserRepository) {}
@@ -34,9 +31,9 @@ export class UsersService {
   }
 
   async findAll(): Promise<UserDocument[]> {
-    const users = this.mongoRepository.findAll();
+    const users = await this.mongoRepository.findAll();
 
-    if (!users) {
+    if (users.length <= 0) {
       throw new GraphQLError(
         'There are no existing users. If you get this message something went wrong and you need to add a ' +
           'user to the database to be able to log in',
