@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { MongoServerError, ObjectId } from 'mongodb';
-import { UserRepository } from './user.repository';
+import { UsersRepository } from './users-repository.service';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
 
 const moduleMocker = new ModuleMocker(global);
@@ -40,7 +40,7 @@ describe('UsersService', () => {
       providers: [UsersService],
     })
       .useMocker((token) => {
-        if (token === UserRepository) {
+        if (token === UsersRepository) {
           return {
             findById: usersRepositoryFindById,
             findAll: usersRepositoryFindAll,
@@ -81,7 +81,7 @@ describe('UsersService', () => {
     it('should return a proper users array', async () => {
       const findAllResult = await service.findAll();
 
-      expect(findAllResult).toEqual([findByIdCorrectResult]);
+      expect(findAllResult).toEqual(findAllCorrectResult);
       expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
     });
 

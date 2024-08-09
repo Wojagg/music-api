@@ -4,11 +4,11 @@ import { MongoServerError } from 'mongodb';
 import { ObjectId } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
-import { UserRepository } from './user.repository';
+import { UsersRepository } from './users-repository.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private mongoRepository: UserRepository) {}
+  constructor(private mongoRepository: UsersRepository) {}
 
   public async isAdmin(id: string): Promise<boolean> {
     const user = await this.findById(id);
