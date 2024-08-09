@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
-export class UserRepository {
+export class UsersRepository {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   public async findById(id: string): Promise<UserDocument | null> {
