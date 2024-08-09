@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
     const request = graphqlExecutionContext.getContext().req;
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('There was no JWT token given');
     }
     try {
       request['user'] = await this.jwtService.verifyAsync(token, {
