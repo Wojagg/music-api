@@ -19,8 +19,6 @@ import { MongooseModule } from '@nestjs/mongoose';
         password: config.redis.password,
       },
     }),
-    UsersModule,
-    AuthModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       typePaths: ['./**/*.graphql'],
@@ -37,6 +35,8 @@ import { MongooseModule } from '@nestjs/mongoose';
         authSource: config.mongo.authSource,
       },
     ),
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
