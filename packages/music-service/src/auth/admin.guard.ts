@@ -1,15 +1,11 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { RequestWithJwtUserInfo } from './model';
 import { UsersService } from '../users/users.service';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { GraphQLError } from 'graphql/index';
 
 @Injectable()
-export class AdminRoleGuard implements CanActivate {
+export class AdminGuard implements CanActivate {
   constructor(private usersService: UsersService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -18,9 +14,15 @@ export class AdminRoleGuard implements CanActivate {
       .req as RequestWithJwtUserInfo;
 
     if (!(await this.usersService.isAdmin(request.user.sub))) {
-      throw new ForbiddenException({
-        message: 'Admin permissions are needed to access this path',
-      });
+      throw new GraphQLError(
+        'Admin permissions are needed to access this path',
+        {
+          extensions: {
+            code: 'FORBIDDEN',
+            http: { status: 403 },
+          },
+        },
+      );
     }
 
     return true;

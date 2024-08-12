@@ -15,5 +15,6 @@ type Query {
 type Mutation {
   createUser(username: String!, password: String!, isAdmin: Boolean!): ID
   updateUser(id: ID!, name: String, isActive: Boolean, isAdmin: Boolean, password: String): Void
+  updateCurrentUser(name: String, isActive: Boolean, isAdmin: Boolean, password: String): Void
   deleteUser(id: ID!): Void
 }

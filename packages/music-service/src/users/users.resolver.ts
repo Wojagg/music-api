@@ -1,9 +1,10 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { ObjectId } from 'mongoose';
 import { UserDocument } from './user.schema';
 import { UseGuards } from '@nestjs/common';
-import { AdminRoleGuard } from '../auth/adminRoleGuard.service';
+import { AdminGuard } from '../auth/admin.guard';
+import { RequestWithJwtUserInfo } from '../auth/model';
 
 @Resolver('User')
 export class UsersResolver {
@@ -19,7 +20,7 @@ export class UsersResolver {
     return this.usersService.findAll();
   }
 
-  @UseGuards(AdminRoleGuard)
+  @UseGuards(AdminGuard)
   @Mutation()
   async createUser(
     @Args('username') username: string,
@@ -29,7 +30,24 @@ export class UsersResolver {
     return await this.usersService.create(username, password, isAdmin);
   }
 
-  @UseGuards(AdminRoleGuard)
+  @Mutation()
+  async updateCurrentUser(
+    @Context('req') request: RequestWithJwtUserInfo,
+    @Args('username') username?: string,
+    @Args('password') password?: string,
+    @Args('isAdmin') isAdmin?: boolean,
+    @Args('isActive') isActive?: boolean,
+  ): Promise<void> {
+    await this.usersService.update(
+      request.user.sub,
+      username,
+      password,
+      isAdmin,
+      isActive,
+    );
+  }
+
+  @UseGuards(AdminGuard)
   @Mutation()
   async updateUser(
     @Args('id') id: string,
@@ -41,7 +59,7 @@ export class UsersResolver {
     await this.usersService.update(id, username, password, isAdmin, isActive);
   }
 
-  @UseGuards(AdminRoleGuard)
+  @UseGuards(AdminGuard)
   @Mutation()
   async deleteUser(@Args('id') id: string): Promise<void> {
     await this.usersService.delete(id);

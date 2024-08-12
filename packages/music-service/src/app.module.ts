@@ -8,6 +8,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { GraphQLVoid } from 'graphql-scalars';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Request } from 'express';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MongooseModule } from '@nestjs/mongoose';
       },
       resolvers: { Void: GraphQLVoid },
       includeStacktraceInErrorResponses: false,
+      context: ({ req }: { req: Request }) => ({ req }),
     }),
     MongooseModule.forRoot(
       `mongodb://${config.mongo.user}:${config.mongo.password}@${config.mongo.host}:${config.mongo.port}/${config.mongo.database}`,
