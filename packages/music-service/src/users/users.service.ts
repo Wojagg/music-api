@@ -4,7 +4,7 @@ import { MongoServerError } from 'mongodb';
 import { ObjectId } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
-import { UsersRepository } from './users-repository.service';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {

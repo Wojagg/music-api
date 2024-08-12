@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersRepository } from './users-repository.service';
+import { UsersRepository } from './users.repository';
 import { User, UserDocument } from './user.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { DeleteResult } from 'mongodb';

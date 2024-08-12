@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { MongoServerError, ObjectId } from 'mongodb';
-import { UsersRepository } from './users-repository.service';
+import { UsersRepository } from './users.repository';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
 
 const moduleMocker = new ModuleMocker(global);
