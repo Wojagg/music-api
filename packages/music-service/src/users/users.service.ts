@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { UserDocument } from './user.schema';
-import { MongoServerError } from 'mongodb';
 import { ObjectId } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
@@ -57,11 +56,11 @@ export class UsersService {
     let userId;
 
     try {
-      userId = this.mongoRepository.create(username, password, isAdmin);
-    } catch (error: unknown) {
+      userId = await this.mongoRepository.create(username, password, isAdmin);
+    } catch (error: any) {
       if (
-        error instanceof MongoServerError &&
-        error.code === MongoErrorCodes.DUPLICATE_KEY
+        error?.name === 'MongoServerError' &&
+        error?.code === MongoErrorCodes.DUPLICATE_KEY
       ) {
         throw new GraphQLError('User with that username already exists', {
           extensions: {
