@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthGuard } from './auth.guard';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { JwtService } from '@nestjs/jwt';
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { config } from '../config/config';
 
 const moduleMocker = new ModuleMocker(global);
@@ -43,7 +43,7 @@ describe('AuthGuard', () => {
 
   describe('canActivate', () => {
     const token = 'string';
-    const gqlContext = gqlMockFactory({
+    const executionContext = executionContextMockFactory({
       req: {
         headers: {
           authorization: `Bearer ${token}`,
@@ -52,9 +52,9 @@ describe('AuthGuard', () => {
     });
 
     it('should return true if token is verified successfully', async () => {
-      const canActivateResult = await guard.canActivate(gqlContext);
+      const canActivateResult = await guard.canActivate(executionContext);
 
-      expect(gqlContext.getArgs()[2].req.user).toEqual('user');
+      expect(executionContext.getArgs()[2].req.user).toEqual('user');
       expect(canActivateResult).toEqual(true);
       expect(verifyAsync).toHaveBeenCalledWith(token, {
         secret: config.jwt.secret,
@@ -66,9 +66,15 @@ describe('AuthGuard', () => {
       verifyAsync.mockRejectedValue('');
 
       await expect(async () => {
-        await guard.canActivate(gqlContext);
+        await guard.canActivate(executionContext);
       }).rejects.toThrow(
-        new UnauthorizedException('Given JWT token is invalid'),
+        expect.objectContaining({
+          message: 'Given JWT token is invalid',
+          extensions: {
+            code: 'UNAUTHORIZED',
+            http: { status: 401 },
+          },
+        }),
       );
       expect(verifyAsync).toHaveBeenCalledWith(token, {
         secret: config.jwt.secret,
@@ -77,23 +83,31 @@ describe('AuthGuard', () => {
     });
 
     it('should throw an error if token is not present', async () => {
-      const gqlContext = gqlMockFactory({
+      const executionContext = executionContextMockFactory({
         req: {
           headers: {},
         },
       });
 
       await expect(async () => {
-        await guard.canActivate(gqlContext);
+        await guard.canActivate(executionContext);
       }).rejects.toThrow(
-        new UnauthorizedException('There was no JWT token given'),
+        expect.objectContaining({
+          message: 'There was no JWT token given',
+          extensions: {
+            code: 'UNAUTHORIZED',
+            http: { status: 401 },
+          },
+        }),
       );
       expect(verifyAsync).toHaveBeenCalledTimes(0);
     });
   });
 });
 
-function gqlMockFactory(context: Record<string, any>): ExecutionContext {
+function executionContextMockFactory(
+  context: Record<string, any>,
+): ExecutionContext {
   return {
     getType: () => 'graphql',
     getHandler: () => 'query',
