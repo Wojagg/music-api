@@ -16,7 +16,7 @@ jobs:
           node-version: '20.x'
 
       - name: install dependencies
-        run: make -j 2 install-dependencies-music-auth install-dependencies-music-service
+        run: make -j 2 install-dependencies-pipelines-music-auth install-dependencies-pipelines-music-service
       - name: run linter music-auth
         run: make -j 2 lint-music-auth lint-music-service
       - name: run npm audit music-auth
