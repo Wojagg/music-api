@@ -16,10 +16,10 @@ jobs:
           node-version: '20.x'
 
       - name: install dependencies
-        run: make install-dependencies-pipelines-all
+        run: make -j 2 install-dependencies-music-auth install-dependencies-music-service
       - name: run linter music-auth
-        run: make lint-all
+        run: make -j 2 lint-music-auth lint-music-service
       - name: run npm audit music-auth
-        run: make npm-audit-all
+        run: make -j 2 npm-audit-music-auth npm-audit-music-service
       - name: run tests music-auth
-        run: make test-all
+        run: make -j 2 test-music-auth test-music-service
