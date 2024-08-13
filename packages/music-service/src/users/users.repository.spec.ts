@@ -21,6 +21,7 @@ describe('UsersRepository', () => {
   class UserModelMock {
     static entityStub = user;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public static async findById(id: string): Promise<User> {
       return this.entityStub;
     }
