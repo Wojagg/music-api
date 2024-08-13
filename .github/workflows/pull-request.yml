@@ -1,0 +1,25 @@
+name: music-api-tests-linter-audit
+run-name: run tests, linter, npm audit
+
+on: [pull_request, push]
+
+jobs:
+  tests-linter-npm-audit:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: install dependencies
+        run: make install-dependencies-pipelines-all
+      - name: run linter music-auth
+        run: make lint-all
+      - name: run npm audit music-auth
+        run: make npm-audit-all
+      - name: run tests music-auth
+        run: make test-all
