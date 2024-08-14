@@ -188,7 +188,7 @@ describe('UsersService', () => {
       });
 
       await expect(async () => {
-        await service.update('');
+        await service.update('', '-');
       }).rejects.toThrow(
         expect.objectContaining({
           message: "update wasn't successful",
@@ -200,12 +200,32 @@ describe('UsersService', () => {
       );
       expect(usersRepositoryUpdate).toHaveBeenCalledWith(
         {},
-        undefined,
+        '-',
         undefined,
         undefined,
         undefined,
       );
       expect(usersRepositoryUpdate).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw a conflict error when update was not successful', async () => {
+      usersRepositoryUpdate.mockImplementation(() => {
+        throw new Error();
+      });
+
+      await expect(async () => {
+        await service.update('');
+      }).rejects.toThrow(
+        expect.objectContaining({
+          message:
+            'There is no properties to update, provide more properties than only id',
+          extensions: {
+            code: 'BAD_REQUEST',
+            http: { status: 400 },
+          },
+        }),
+      );
+      expect(usersRepositoryUpdate).toHaveBeenCalledTimes(0);
     });
   });
 
@@ -219,7 +239,7 @@ describe('UsersService', () => {
       expect(usersRepositoryDelete).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw a conflict error when update was not successful', async () => {
+    it('should throw a conflict error when delete was not successful', async () => {
       usersRepositoryDelete.mockReturnValue(0);
 
       await expect(async () => {
