@@ -1,7 +1,7 @@
 name: music-api-tests-linter-audit
 run-name: run tests, linter, npm audit
 
-on: [pull_request, push]
+on: [pull_request]
 
 jobs:
   tests-linter-npm-audit:
