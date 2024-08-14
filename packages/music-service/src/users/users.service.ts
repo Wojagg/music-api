@@ -7,7 +7,7 @@ import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(private mongoRepository: UsersRepository) {}
+  constructor(private usersRepository: UsersRepository) {}
 
   public async isAdmin(id: string): Promise<boolean> {
     const user = await this.findById(id);
@@ -15,7 +15,7 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument> {
-    const user = await this.mongoRepository.findById(id);
+    const user = await this.usersRepository.findById(id);
 
     if (!user) {
       throw new GraphQLError("user doesn't exist", {
@@ -30,7 +30,7 @@ export class UsersService {
   }
 
   async findAll(): Promise<UserDocument[]> {
-    const users = await this.mongoRepository.findAll();
+    const users = await this.usersRepository.findAll();
 
     if (users.length <= 0) {
       throw new GraphQLError(
@@ -56,7 +56,7 @@ export class UsersService {
     let userId;
 
     try {
-      userId = await this.mongoRepository.create(username, password, isAdmin);
+      userId = await this.usersRepository.create(username, password, isAdmin);
     } catch (error: any) {
       if (
         error?.name === 'MongoServerError' &&
@@ -91,7 +91,7 @@ export class UsersService {
     const userToUpdate = await this.findById(id);
 
     try {
-      await this.mongoRepository.update(
+      await this.usersRepository.update(
         userToUpdate,
         username,
         password,
@@ -109,7 +109,7 @@ export class UsersService {
   }
 
   async delete(id: string): Promise<void> {
-    const deletedCount = await this.mongoRepository.delete(id);
+    const deletedCount = await this.usersRepository.delete(id);
 
     if (deletedCount <= 0) {
       throw new GraphQLError(
