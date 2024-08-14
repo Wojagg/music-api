@@ -88,6 +88,18 @@ export class UsersService {
     isAdmin?: boolean,
     isActive?: boolean,
   ): Promise<void> {
+    if (!username && !password && !isAdmin && !isActive) {
+      throw new GraphQLError(
+        'There is no properties to update, provide more properties than only id',
+        {
+          extensions: {
+            code: 'BAD_REQUEST',
+            http: { status: 400 },
+          },
+        },
+      );
+    }
+
     const userToUpdate = await this.findById(id);
 
     try {
