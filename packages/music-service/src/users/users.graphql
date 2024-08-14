@@ -2,6 +2,7 @@ scalar Void
 
 type User {
   id: ID!
+  pass: String
   name: String
   isActive: Boolean
   isAdmin: Boolean
@@ -13,8 +14,8 @@ type Query {
 }
 
 type Mutation {
-  createUser(username: String!, password: String!, isAdmin: Boolean!): ID
-  updateUser(id: ID!, name: String, isActive: Boolean, isAdmin: Boolean, password: String): Void
-  updateCurrentUser(name: String, isActive: Boolean, isAdmin: Boolean, password: String): Void
+  createUser(name: String!, pass: String!, isAdmin: Boolean!): ID
+  updateUser(id: ID!, name: String, isActive: Boolean, isAdmin: Boolean, pass: String): Void
+  updateCurrentUser(name: String, isActive: Boolean, isAdmin: Boolean, pass: String): Void
   deleteUser(id: ID!): Void
 }
