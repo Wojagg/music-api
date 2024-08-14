@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserDocument } from './user.schema';
 import { ObjectId } from 'mongoose';
-import { GraphQLError } from 'graphql';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
 import { UsersRepository } from './users.repository';
 
@@ -18,12 +22,7 @@ export class UsersService {
     const user = await this.usersRepository.findById(id);
 
     if (!user) {
-      throw new GraphQLError("user doesn't exist", {
-        extensions: {
-          code: 'NOT_FOUND',
-          http: { status: 404 },
-        },
-      });
+      throw new NotFoundException("user doesn't exist");
     }
 
     return user;
@@ -33,15 +32,9 @@ export class UsersService {
     const users = await this.usersRepository.findAll();
 
     if (users.length <= 0) {
-      throw new GraphQLError(
+      throw new NotFoundException(
         'There are no existing users. If you get this message something went wrong and you need to add a ' +
           'user to the database to be able to log in',
-        {
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        },
       );
     }
 
@@ -62,20 +55,10 @@ export class UsersService {
         error?.name === 'MongoServerError' &&
         error?.code === MongoErrorCodes.DUPLICATE_KEY
       ) {
-        throw new GraphQLError('User with that username already exists', {
-          extensions: {
-            code: 'CONFLICT',
-            http: { status: 409 },
-          },
-        });
+        throw new ConflictException('User with that username already exists');
       }
 
-      throw new GraphQLError('Unknown error', {
-        extensions: {
-          code: 'INTERNAL_SERVER_ERROR',
-          http: { status: 500 },
-        },
-      });
+      throw new InternalServerErrorException('Unknown error');
     }
 
     return userId;
@@ -99,12 +82,7 @@ export class UsersService {
         isActive,
       );
     } catch {
-      throw new GraphQLError("update wasn't successful", {
-        extensions: {
-          code: 'CONFLICT',
-          http: { status: 409 },
-        },
-      });
+      throw new ConflictException("update wasn't successful");
     }
   }
 
@@ -112,14 +90,8 @@ export class UsersService {
     const deletedCount = await this.usersRepository.delete(id);
 
     if (deletedCount <= 0) {
-      throw new GraphQLError(
+      throw new NotFoundException(
         'No documents were deleted, check if provided id is valid',
-        {
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        },
       );
     }
   }

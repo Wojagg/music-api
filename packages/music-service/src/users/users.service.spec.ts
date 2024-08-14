@@ -4,6 +4,11 @@ import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { MongoServerError, ObjectId } from 'mongodb';
 import { UsersRepository } from './users.repository';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
+import {
+  ConflictException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
 const moduleMocker = new ModuleMocker(global);
 
@@ -91,14 +96,9 @@ describe('UsersService', () => {
       await expect(async () => {
         await service.findAll();
       }).rejects.toThrow(
-        expect.objectContaining({
-          message:
-            'There are no existing users. If you get this message something went wrong and you need to add a user to the database to be able to log in',
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        }),
+        new NotFoundException(
+          'There are no existing users. If you get this message something went wrong and you need to add a user to the database to be able to log in',
+        ),
       );
       expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
     });
@@ -125,13 +125,7 @@ describe('UsersService', () => {
       await expect(async () => {
         await service.create('username', 'password', true);
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'User with that username already exists',
-          extensions: {
-            code: 'CONFLICT',
-            http: { status: 409 },
-          },
-        }),
+        new ConflictException('User with that username already exists'),
       );
       expect(usersRepositoryCreate).toHaveBeenCalledWith(
         'username',
@@ -148,15 +142,7 @@ describe('UsersService', () => {
 
       await expect(async () => {
         await service.create('username', 'password', true);
-      }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'Unknown error',
-          extensions: {
-            code: 'INTERNAL_SERVER_ERROR',
-            http: { status: 500 },
-          },
-        }),
-      );
+      }).rejects.toThrow(new InternalServerErrorException('Unknown error'));
       expect(usersRepositoryCreate).toHaveBeenCalledWith(
         'username',
         'password',
@@ -189,15 +175,7 @@ describe('UsersService', () => {
 
       await expect(async () => {
         await service.update('');
-      }).rejects.toThrow(
-        expect.objectContaining({
-          message: "update wasn't successful",
-          extensions: {
-            code: 'CONFLICT',
-            http: { status: 409 },
-          },
-        }),
-      );
+      }).rejects.toThrow(new ConflictException("update wasn't successful"));
       expect(usersRepositoryUpdate).toHaveBeenCalledWith(
         {},
         undefined,
@@ -225,13 +203,9 @@ describe('UsersService', () => {
       await expect(async () => {
         await service.delete('');
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'No documents were deleted, check if provided id is valid',
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        }),
+        new NotFoundException(
+          'No documents were deleted, check if provided id is valid',
+        ),
       );
       expect(usersRepositoryDelete).toHaveBeenCalledWith('');
       expect(usersRepositoryDelete).toHaveBeenCalledTimes(1);

@@ -1,9 +1,13 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { config } from '../config/config';
 import { Request } from 'express';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { GraphQLError } from 'graphql/index';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -14,24 +18,14 @@ export class AuthGuard implements CanActivate {
     const request = graphqlExecutionContext.getContext().req;
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new GraphQLError('There was no JWT token given', {
-        extensions: {
-          code: 'UNAUTHORIZED',
-          http: { status: 401 },
-        },
-      });
+      throw new UnauthorizedException('There was no JWT token given');
     }
     try {
       request['user'] = await this.jwtService.verifyAsync(token, {
         secret: config.jwt.secret,
       });
     } catch {
-      throw new GraphQLError('Given JWT token is invalid', {
-        extensions: {
-          code: 'UNAUTHORIZED',
-          http: { status: 401 },
-        },
-      });
+      throw new UnauthorizedException('Given JWT token is invalid');
     }
     return true;
   }

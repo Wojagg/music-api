@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AdminGuard } from './admin.guard';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 
 const moduleMocker = new ModuleMocker(global);
@@ -64,13 +64,9 @@ describe('AdminGuard', () => {
       await expect(async () => {
         await guard.canActivate(executionContext);
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'Admin permissions are needed to access this path',
-          extensions: {
-            code: 'FORBIDDEN',
-            http: { status: 403 },
-          },
-        }),
+        new ForbiddenException(
+          'Admin permissions are needed to access this path',
+        ),
       );
       expect(isAdmin).toHaveBeenCalledWith(username);
       expect(isAdmin).toHaveBeenCalledTimes(1);
