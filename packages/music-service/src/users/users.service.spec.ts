@@ -69,17 +69,28 @@ describe('UsersService', () => {
 
   describe('findById', () => {
     it('should return a proper user', async () => {
-      const findByIdResult = await service.findById('');
+      const findByIdResult = await service.findById(
+        ['name', 'pass', 'isActive', 'isAdmin'],
+        '',
+      );
 
       expect(findByIdResult).toEqual(findByIdCorrectResult);
-      expect(usersRepositoryFindById).toHaveBeenCalledWith('');
+      expect(usersRepositoryFindById).toHaveBeenCalledWith(
+        ['name', 'pass', 'isActive', 'isAdmin'],
+        '',
+      );
       expect(usersRepositoryFindById).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('findAll', () => {
     it('should return a proper users array', async () => {
-      const findAllResult = await service.findAll();
+      const findAllResult = await service.findAll([
+        'name',
+        'pass',
+        'isActive',
+        'isAdmin',
+      ]);
 
       expect(findAllResult).toEqual(findAllCorrectResult);
       expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
@@ -89,7 +100,7 @@ describe('UsersService', () => {
       usersRepositoryFindAll.mockReturnValue([]);
 
       await expect(async () => {
-        await service.findAll();
+        await service.findAll(['id', 'name', 'pass', 'isActive', 'isAdmin']);
       }).rejects.toThrow(
         expect.objectContaining({
           message:

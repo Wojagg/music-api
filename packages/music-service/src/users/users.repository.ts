@@ -6,14 +6,37 @@ import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class UsersRepository {
+  private isAdminDatabaseFieldName = 'isAdmin';
+  private idDatabaseFieldName = '_id';
+  private idIncomingFieldName = 'id';
+
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  public async findById(id: string): Promise<UserDocument | null> {
-    return this.userModel.findById(id);
+  public async findById(
+    fieldsToFetch: string[],
+    id: string,
+  ): Promise<UserDocument | null> {
+    const user = await this.userModel.findById(
+      id,
+      this.getFieldsToFetchProjection(fieldsToFetch),
+    );
+
+    return user;
   }
 
-  public async findAll(): Promise<UserDocument[]> {
-    return this.userModel.find();
+  public async findAll(fieldsToFetch: string[]): Promise<UserDocument[]> {
+    const users = await this.userModel.find(
+      {},
+      this.getFieldsToFetchProjection(fieldsToFetch),
+    );
+
+    return users;
+  }
+
+  public async isAdmin(id: string): Promise<boolean|undefined> {
+    const user = await this.findById([this.isAdminDatabaseFieldName], id);
+
+    return user?.isAdmin;
   }
 
   public async create(
@@ -53,5 +76,20 @@ export class UsersRepository {
     });
 
     return deleteResult.deletedCount;
+  }
+
+  private getFieldsToFetchProjection(
+    fieldsToFetch: string[],
+  ): Record<string, number> {
+    const fieldsToFetchFilter: Record<string, number> = {};
+    fieldsToFetch.forEach((field) => {
+      fieldsToFetchFilter[field] = 1;
+    });
+
+    if (!fieldsToFetch.includes(this.idIncomingFieldName)) {
+      fieldsToFetchFilter[this.idDatabaseFieldName] = 0;
+    }
+
+    return fieldsToFetchFilter;
   }
 }

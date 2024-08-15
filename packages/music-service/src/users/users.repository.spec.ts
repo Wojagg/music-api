@@ -68,19 +68,66 @@ describe('UsersRepository', () => {
 
   describe('findById', () => {
     it('should return a proper user', async () => {
-      const findByIdResult = await repository.findById('');
+      const findByIdResult = await repository.findById(
+        ['name', 'isActive', 'isAdmin'],
+        '',
+      );
 
       expect(findByIdResult).toEqual(user);
-      expect(findByIdSpy).toHaveBeenCalledWith('');
+      expect(findByIdSpy).toHaveBeenCalledWith('', {
+        _id: 0,
+        isActive: 1,
+        isAdmin: 1,
+        name: 1,
+      });
+      expect(findByIdSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return a proper user with given properties only', async () => {
+      const findByIdResult = await repository.findById(['name'], '');
+
+      expect(findByIdResult).toEqual(user);
+      expect(findByIdSpy).toHaveBeenCalledWith('', {
+        _id: 0,
+        name: 1,
+      });
       expect(findByIdSpy).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('findAll', () => {
     it('should return a proper users array', async () => {
-      const findAllResult = await repository.findAll();
+      const findAllResult = await repository.findAll([
+        'id',
+        'name',
+        'isActive',
+        'isAdmin',
+      ]);
 
       expect(findAllResult).toEqual([user]);
+      expect(findSpy).toHaveBeenCalledWith(
+        {},
+        {
+          id: 1,
+          name: 1,
+          isActive: 1,
+          isAdmin: 1,
+        },
+      );
+      expect(findSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return a proper users array with given properties only', async () => {
+      const findAllResult = await repository.findAll(['id', 'name']);
+
+      expect(findAllResult).toEqual([user]);
+      expect(findSpy).toHaveBeenCalledWith(
+        {},
+        {
+          id: 1,
+          name: 1,
+        },
+      );
       expect(findSpy).toHaveBeenCalledTimes(1);
     });
   });

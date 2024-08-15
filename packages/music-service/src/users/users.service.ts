@@ -10,12 +10,21 @@ export class UsersService {
   constructor(private usersRepository: UsersRepository) {}
 
   public async isAdmin(id: string): Promise<boolean> {
-    const user = await this.findById(id);
-    return user.isAdmin;
+    const isAdmin = await this.usersRepository.isAdmin(id);
+    if (isAdmin) {
+      return isAdmin;
+    }
+
+    throw new GraphQLError("user doesn't exist", {
+      extensions: {
+        code: 'NOT_FOUND',
+        http: { status: 404 },
+      },
+    });
   }
 
-  async findById(id: string): Promise<UserDocument> {
-    const user = await this.usersRepository.findById(id);
+  async findById(requestedFields: string[], id: string): Promise<UserDocument> {
+    const user = await this.usersRepository.findById(requestedFields, id);
 
     if (!user) {
       throw new GraphQLError("user doesn't exist", {
@@ -29,8 +38,8 @@ export class UsersService {
     return user;
   }
 
-  async findAll(): Promise<UserDocument[]> {
-    const users = await this.usersRepository.findAll();
+  async findAll(requestedFields: string[]): Promise<UserDocument[]> {
+    const users = await this.usersRepository.findAll(requestedFields);
 
     if (users.length <= 0) {
       throw new GraphQLError(
@@ -83,18 +92,33 @@ export class UsersService {
 
   async update(
     id: string,
-    username?: string,
-    password?: string,
+    name?: string,
+    pass?: string,
     isAdmin?: boolean,
     isActive?: boolean,
   ): Promise<void> {
-    const userToUpdate = await this.findById(id);
+    const fieldsToFetch = ['id'];
+
+    if (name !== undefined) {
+      fieldsToFetch.push('name');
+    }
+    if (pass !== undefined) {
+      fieldsToFetch.push('pass');
+    }
+    if (isAdmin !== undefined) {
+      fieldsToFetch.push('isAdmin');
+    }
+    if (isActive !== undefined) {
+      fieldsToFetch.push('isActive');
+    }
+
+    const userToUpdate = await this.findById(fieldsToFetch, id);
 
     try {
       await this.usersRepository.update(
         userToUpdate,
-        username,
-        password,
+        name,
+        pass,
         isAdmin,
         isActive,
       );
