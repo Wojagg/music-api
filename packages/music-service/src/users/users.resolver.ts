@@ -5,14 +5,21 @@ import { UserDocument } from './user.schema';
 import { UseGuards } from '@nestjs/common';
 import { AdminGuard } from '../auth/admin.guard';
 import { RequestWithJwtUserInfo } from '../auth/model';
+import {
+  CreateUserInput,
+  DeleteUserInput,
+  GetUserInput,
+  UpdateCurrentUserInput,
+  UpdateUserInput,
+} from './user.validators';
 
 @Resolver('User')
 export class UsersResolver {
   constructor(private usersService: UsersService) {}
 
   @Query()
-  async getUser(@Args('id') id: string) {
-    return this.usersService.findById(id);
+  async getUser(@Args() args: GetUserInput) {
+    return this.usersService.findById(args.id);
   }
 
   @Query()
@@ -22,46 +29,40 @@ export class UsersResolver {
 
   @UseGuards(AdminGuard)
   @Mutation()
-  async createUser(
-    @Args('username') username: string,
-    @Args('password') password: string,
-    @Args('isAdmin') isAdmin: boolean,
-  ): Promise<ObjectId> {
-    return await this.usersService.create(username, password, isAdmin);
+  async createUser(@Args() args: CreateUserInput): Promise<ObjectId> {
+    return await this.usersService.create({
+      username: args.name,
+      password: args.pass,
+      isAdmin: args.isAdmin,
+    });
   }
 
   @Mutation()
   async updateCurrentUser(
     @Context('req') request: RequestWithJwtUserInfo,
-    @Args('username') username?: string,
-    @Args('password') password?: string,
-    @Args('isAdmin') isAdmin?: boolean,
-    @Args('isActive') isActive?: boolean,
+    @Args() args: UpdateCurrentUserInput,
   ): Promise<void> {
-    await this.usersService.update(
-      request.user.sub,
-      username,
-      password,
-      isAdmin,
-      isActive,
-    );
+    await this.usersService.update({
+      id: request.user.sub,
+      isActive: args.isActive,
+      username: args.name,
+      password: args.pass,
+    });
   }
 
   @UseGuards(AdminGuard)
   @Mutation()
-  async updateUser(
-    @Args('id') id: string,
-    @Args('username') username?: string,
-    @Args('password') password?: string,
-    @Args('isAdmin') isAdmin?: boolean,
-    @Args('isActive') isActive?: boolean,
-  ): Promise<void> {
-    await this.usersService.update(id, username, password, isAdmin, isActive);
+  async updateUser(@Args() args: UpdateUserInput): Promise<void> {
+    await this.usersService.update({
+      id: args.id,
+      isActive: args.isActive,
+      isAdmin: args.isAdmin,
+    });
   }
 
   @UseGuards(AdminGuard)
   @Mutation()
-  async deleteUser(@Args('id') id: string): Promise<void> {
-    await this.usersService.delete(id);
+  async deleteUser(@Args() args: DeleteUserInput): Promise<void> {
+    await this.usersService.delete(args.id);
   }
 }
