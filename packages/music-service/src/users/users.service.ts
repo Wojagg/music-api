@@ -48,11 +48,12 @@ export class UsersService {
     return users;
   }
 
-  async create(
-    username: string,
-    password: string,
-    isAdmin: boolean,
-  ): Promise<ObjectId> {
+  async create(createData: {
+    username: string;
+    password: string;
+    isAdmin: boolean;
+  }): Promise<ObjectId> {
+    const { username, password, isAdmin } = createData;
     let userId;
 
     try {
@@ -81,14 +82,21 @@ export class UsersService {
     return userId;
   }
 
-  async update(
-    id: string,
-    username?: string,
-    password?: string,
-    isAdmin?: boolean,
-    isActive?: boolean,
-  ): Promise<void> {
-    if (!username && !password && !isAdmin && !isActive) {
+  async update(updateData: {
+    id: string;
+    username?: string;
+    password?: string;
+    isActive?: boolean;
+    isAdmin?: boolean;
+  }): Promise<void> {
+    const { id, isActive, username, password, isAdmin } = updateData;
+
+    if (
+      !username &&
+      !password &&
+      isAdmin === undefined &&
+      isActive === undefined
+    ) {
       throw new GraphQLError(
         'There is no properties to update, provide more properties than only id',
         {

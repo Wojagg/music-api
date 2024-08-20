@@ -30,7 +30,11 @@ export class UsersResolver {
   @UseGuards(AdminGuard)
   @Mutation()
   async createUser(@Args() args: CreateUserInput): Promise<ObjectId> {
-    return await this.usersService.create(args.name, args.pass, args.isAdmin);
+    return await this.usersService.create({
+      username: args.name,
+      password: args.pass,
+      isAdmin: args.isAdmin,
+    });
   }
 
   @Mutation()
@@ -38,25 +42,22 @@ export class UsersResolver {
     @Context('req') request: RequestWithJwtUserInfo,
     @Args() args: UpdateCurrentUserInput,
   ): Promise<void> {
-    await this.usersService.update(
-      request.user.sub,
-      args.name,
-      args.pass,
-      args.isAdmin,
-      args.isActive,
-    );
+    await this.usersService.update({
+      id: request.user.sub,
+      isActive: args.isActive,
+      username: args.name,
+      password: args.pass,
+    });
   }
 
   @UseGuards(AdminGuard)
   @Mutation()
   async updateUser(@Args() args: UpdateUserInput): Promise<void> {
-    await this.usersService.update(
-      args.id,
-      args.name,
-      args.pass,
-      args.isAdmin,
-      args.isActive,
-    );
+    await this.usersService.update({
+      id: args.id,
+      isActive: args.isActive,
+      isAdmin: args.isAdmin,
+    });
   }
 
   @UseGuards(AdminGuard)

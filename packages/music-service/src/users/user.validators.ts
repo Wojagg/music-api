@@ -1,4 +1,4 @@
-import { IsBoolean, IsMongoId, IsOptional, Length } from 'class-validator';
+import { IsBoolean, IsMongoId, IsOptional, MinLength } from 'class-validator';
 import { User } from '../graphql';
 
 export class GetUserInput extends User {
@@ -7,10 +7,10 @@ export class GetUserInput extends User {
 }
 
 export class CreateUserInput extends User {
-  @Length(4, 20)
+  @MinLength(4)
   name: string;
 
-  @Length(8, 40)
+  @MinLength(8)
   pass: string;
 
   @IsBoolean()
@@ -19,16 +19,12 @@ export class CreateUserInput extends User {
 
 export class UpdateCurrentUserInput extends User {
   @IsOptional()
-  @Length(4, 20)
+  @MinLength(4)
   name?: string;
 
   @IsOptional()
-  @Length(8, 40)
+  @MinLength(8)
   pass?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isAdmin?: boolean;
 
   @IsOptional()
   @IsBoolean()
@@ -40,14 +36,6 @@ export class UpdateUserInput extends User {
   id: string;
 
   @IsOptional()
-  @Length(4, 20)
-  name?: string;
-
-  @IsOptional()
-  @Length(8, 40)
-  pass?: string;
-
-  @IsOptional()
   @IsBoolean()
   isAdmin?: boolean;
 
@@ -57,6 +45,6 @@ export class UpdateUserInput extends User {
 }
 
 export class DeleteUserInput extends User {
-  @Length(24, 24)
+  @IsMongoId()
   id: string;
 }

@@ -105,8 +105,14 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
+    const createUserData = {
+      username: 'username',
+      password: 'password',
+      isAdmin: true,
+    };
+
     it('should return a proper user id', async () => {
-      const createResult = await service.create('username', 'password', true);
+      const createResult = await service.create(createUserData);
 
       expect(createResult).toEqual(createCorrectResult);
       expect(usersRepositoryCreate).toHaveBeenCalledWith(
@@ -123,7 +129,7 @@ describe('UsersService', () => {
       });
 
       await expect(async () => {
-        await service.create('username', 'password', true);
+        await service.create(createUserData);
       }).rejects.toThrow(
         expect.objectContaining({
           message: 'User with that username already exists',
@@ -147,7 +153,7 @@ describe('UsersService', () => {
       });
 
       await expect(async () => {
-        await service.create('username', 'password', true);
+        await service.create(createUserData);
       }).rejects.toThrow(
         expect.objectContaining({
           message: 'Unknown error',
@@ -170,7 +176,13 @@ describe('UsersService', () => {
     it('should successfully run the .update() function', async () => {
       usersRepositoryFindById.mockReturnValue({});
 
-      await service.update('', 'username', 'password', true, true);
+      await service.update({
+        id: '',
+        username: 'username',
+        password: 'password',
+        isAdmin: true,
+        isActive: true,
+      });
 
       expect(usersRepositoryUpdate).toHaveBeenCalledWith(
         {},
@@ -188,7 +200,10 @@ describe('UsersService', () => {
       });
 
       await expect(async () => {
-        await service.update('', '-');
+        await service.update({
+          id: '',
+          username: '-',
+        });
       }).rejects.toThrow(
         expect.objectContaining({
           message: "update wasn't successful",
@@ -214,7 +229,7 @@ describe('UsersService', () => {
       });
 
       await expect(async () => {
-        await service.update('');
+        await service.update({ id: '' });
       }).rejects.toThrow(
         expect.objectContaining({
           message:
