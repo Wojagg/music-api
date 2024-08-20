@@ -1,4 +1,11 @@
-import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Context,
+  Info,
+  Mutation,
+  Query,
+  Resolver,
+} from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { ObjectId } from 'mongoose';
 import { UserDocument } from './user.schema';
@@ -12,19 +19,28 @@ import {
   UpdateCurrentUserInput,
   UpdateUserInput,
 } from './user.validators';
+import { GraphQLResolveInfo } from 'graphql/type';
+import { fieldsList } from 'graphql-fields-list';
 
 @Resolver('User')
 export class UsersResolver {
   constructor(private usersService: UsersService) {}
 
   @Query()
-  async getUser(@Args() args: GetUserInput) {
-    return this.usersService.findById(args.id);
+  async getUser(
+    @Args() args: GetUserInput,
+    @Info() info: GraphQLResolveInfo,
+  ): Promise<UserDocument> {
+    const requestedFields = fieldsList(info);
+
+    return this.usersService.findById(requestedFields, args.id);
   }
 
   @Query()
-  async getUsers(): Promise<UserDocument[]> {
-    return this.usersService.findAll();
+  async getUsers(@Info() info: GraphQLResolveInfo): Promise<UserDocument[]> {
+    const requestedFields = fieldsList(info);
+
+    return this.usersService.findAll(requestedFields);
   }
 
   @UseGuards(AdminGuard)

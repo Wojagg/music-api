@@ -16,12 +16,16 @@ export class UsersService {
   constructor(private usersRepository: UsersRepository) {}
 
   public async isAdmin(id: string): Promise<boolean> {
-    const user = await this.findById(id);
-    return user.isAdmin;
+    const isAdmin = await this.usersRepository.isAdmin(id);
+    if (isAdmin) {
+      return isAdmin;
+    }
+
+    throw new NotFoundException("user doesn't exist");
   }
 
-  async findById(id: string): Promise<UserDocument> {
-    const user = await this.usersRepository.findById(id);
+  async findById(requestedFields: string[], id: string): Promise<UserDocument> {
+    const user = await this.usersRepository.findById(requestedFields, id);
 
     if (!user) {
       throw new NotFoundException("user doesn't exist");
@@ -30,8 +34,17 @@ export class UsersService {
     return user;
   }
 
-  async findAll(): Promise<UserDocument[]> {
-    return await this.usersRepository.findAll();
+  async findAll(requestedFields: string[]): Promise<UserDocument[]> {
+    const users = await this.usersRepository.findAll(requestedFields);
+
+    if (users.length <= 0) {
+      throw new NotFoundException(
+        'There are no existing users. If you get this message something went wrong and you need to add a ' +
+          'user to the database to be able to log in',
+      );
+    }
+
+    return users;
   }
 
   async create(createData: {
@@ -67,6 +80,21 @@ export class UsersService {
   }): Promise<void> {
     const { id, isActive, username, password, isAdmin } = updateData;
 
+    const fieldsToFetch = ['id'];
+
+    if (username !== undefined) {
+      fieldsToFetch.push('name');
+    }
+    if (password !== undefined) {
+      fieldsToFetch.push('pass');
+    }
+    if (isAdmin !== undefined) {
+      fieldsToFetch.push('isAdmin');
+    }
+    if (isActive !== undefined) {
+      fieldsToFetch.push('isActive');
+    }
+
     if (
       !username &&
       !password &&
@@ -78,7 +106,7 @@ export class UsersService {
       );
     }
 
-    const userToUpdate = await this.findById(id);
+    const userToUpdate = await this.findById(fieldsToFetch, id);
 
     try {
       await this.usersRepository.update(
