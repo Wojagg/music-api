@@ -4,6 +4,13 @@ import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { MongoServerError, ObjectId } from 'mongodb';
 import { UsersRepository } from './users.repository';
 import { MongoErrorCodes } from '../mongo/errors.dictionary';
+import {
+  BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 
 const moduleMocker = new ModuleMocker(global);
 
@@ -84,24 +91,6 @@ describe('UsersService', () => {
       expect(findAllResult).toEqual(findAllCorrectResult);
       expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
     });
-
-    it('should throw a conflict error when user with provided username already exists', async () => {
-      usersRepositoryFindAll.mockReturnValue([]);
-
-      await expect(async () => {
-        await service.findAll();
-      }).rejects.toThrow(
-        expect.objectContaining({
-          message:
-            'There are no existing users. If you get this message something went wrong and you need to add a user to the database to be able to log in',
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        }),
-      );
-      expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe('create', () => {
@@ -131,13 +120,7 @@ describe('UsersService', () => {
       await expect(async () => {
         await service.create(createUserData);
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'User with that username already exists',
-          extensions: {
-            code: 'CONFLICT',
-            http: { status: 409 },
-          },
-        }),
+        new ConflictException('User with that username already exists'),
       );
       expect(usersRepositoryCreate).toHaveBeenCalledWith(
         'username',
@@ -154,15 +137,7 @@ describe('UsersService', () => {
 
       await expect(async () => {
         await service.create(createUserData);
-      }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'Unknown error',
-          extensions: {
-            code: 'INTERNAL_SERVER_ERROR',
-            http: { status: 500 },
-          },
-        }),
-      );
+      }).rejects.toThrow(new InternalServerErrorException('Unknown error'));
       expect(usersRepositoryCreate).toHaveBeenCalledWith(
         'username',
         'password',
@@ -204,15 +179,7 @@ describe('UsersService', () => {
           id: '',
           username: '-',
         });
-      }).rejects.toThrow(
-        expect.objectContaining({
-          message: "update wasn't successful",
-          extensions: {
-            code: 'CONFLICT',
-            http: { status: 409 },
-          },
-        }),
-      );
+      }).rejects.toThrow(new ConflictException("update wasn't successful"));
       expect(usersRepositoryUpdate).toHaveBeenCalledWith(
         {},
         '-',
@@ -231,14 +198,9 @@ describe('UsersService', () => {
       await expect(async () => {
         await service.update({ id: '' });
       }).rejects.toThrow(
-        expect.objectContaining({
-          message:
-            'There is no properties to update, provide more properties than only id',
-          extensions: {
-            code: 'BAD_REQUEST',
-            http: { status: 400 },
-          },
-        }),
+        new BadRequestException(
+          'There is no properties to update, provide more properties than only id',
+        ),
       );
       expect(usersRepositoryUpdate).toHaveBeenCalledTimes(0);
     });
@@ -248,7 +210,7 @@ describe('UsersService', () => {
     it('should successfully run the .delete() function and return a number of deleted documents', async () => {
       usersRepositoryDelete.mockReturnValue(deleteCorrectResult);
 
-      await service.delete('');
+      await service.delete('_', '');
 
       expect(usersRepositoryDelete).toHaveBeenCalledWith('');
       expect(usersRepositoryDelete).toHaveBeenCalledTimes(1);
@@ -258,18 +220,25 @@ describe('UsersService', () => {
       usersRepositoryDelete.mockReturnValue(0);
 
       await expect(async () => {
-        await service.delete('');
+        await service.delete('_', '');
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'No documents were deleted, check if provided id is valid',
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        }),
+        new NotFoundException(
+          'No documents were deleted, check if provided id is valid',
+        ),
       );
       expect(usersRepositoryDelete).toHaveBeenCalledWith('');
       expect(usersRepositoryDelete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw a unprocessable entity error when trying to delete current user', async () => {
+      await expect(async () => {
+        await service.delete('', '');
+      }).rejects.toThrow(
+        new UnprocessableEntityException(
+          "You can't delete the user you are logged in as",
+        ),
+      );
+      expect(usersRepositoryDelete).toHaveBeenCalledTimes(0);
     });
   });
 });

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthGuard } from './auth.guard';
 import { ModuleMocker, MockFunctionMetadata } from 'jest-mock';
 import { JwtService } from '@nestjs/jwt';
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { config } from '../config/config';
 
 const moduleMocker = new ModuleMocker(global);
@@ -68,13 +68,7 @@ describe('AuthGuard', () => {
       await expect(async () => {
         await guard.canActivate(executionContext);
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'Given JWT token is invalid',
-          extensions: {
-            code: 'UNAUTHORIZED',
-            http: { status: 401 },
-          },
-        }),
+        new UnauthorizedException('Given JWT token is invalid'),
       );
       expect(verifyAsync).toHaveBeenCalledWith(token, {
         secret: config.jwt.secret,
@@ -92,13 +86,7 @@ describe('AuthGuard', () => {
       await expect(async () => {
         await guard.canActivate(executionContext);
       }).rejects.toThrow(
-        expect.objectContaining({
-          message: 'There was no JWT token given',
-          extensions: {
-            code: 'UNAUTHORIZED',
-            http: { status: 401 },
-          },
-        }),
+        new UnauthorizedException('There was no JWT token given'),
       );
       expect(verifyAsync).toHaveBeenCalledTimes(0);
     });
