@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { UserDocument } from './user.schema';
 import { ObjectId } from 'mongoose';
@@ -29,16 +30,7 @@ export class UsersService {
   }
 
   async findAll(): Promise<UserDocument[]> {
-    const users = await this.usersRepository.findAll();
-
-    if (users.length <= 0) {
-      throw new NotFoundException(
-        'There are no existing users. If you get this message something went wrong and you need to add a ' +
-          'user to the database to be able to log in',
-      );
-    }
-
-    return users;
+    return await this.usersRepository.findAll();
   }
 
   async create(
@@ -86,7 +78,13 @@ export class UsersService {
     }
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(currentUserId: string, id: string): Promise<void> {
+    if (currentUserId === id) {
+      throw new UnprocessableEntityException(
+        "You can't delete the user you are logged in as",
+      );
+    }
+
     const deletedCount = await this.usersRepository.delete(id);
 
     if (deletedCount <= 0) {

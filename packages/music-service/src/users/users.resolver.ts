@@ -61,7 +61,10 @@ export class UsersResolver {
 
   @UseGuards(AdminGuard)
   @Mutation()
-  async deleteUser(@Args('id') id: string): Promise<void> {
-    await this.usersService.delete(id);
+  async deleteUser(
+    @Context('req') request: RequestWithJwtUserInfo,
+    @Args('id') id: string,
+  ): Promise<void> {
+    await this.usersService.delete(request.user.sub, id);
   }
 }

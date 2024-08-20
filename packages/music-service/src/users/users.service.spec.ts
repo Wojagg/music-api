@@ -8,6 +8,7 @@ import {
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 
 const moduleMocker = new ModuleMocker(global);
@@ -87,19 +88,6 @@ describe('UsersService', () => {
       const findAllResult = await service.findAll();
 
       expect(findAllResult).toEqual(findAllCorrectResult);
-      expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
-    });
-
-    it('should throw a conflict error when user with provided username already exists', async () => {
-      usersRepositoryFindAll.mockReturnValue([]);
-
-      await expect(async () => {
-        await service.findAll();
-      }).rejects.toThrow(
-        new NotFoundException(
-          'There are no existing users. If you get this message something went wrong and you need to add a user to the database to be able to log in',
-        ),
-      );
       expect(usersRepositoryFindAll).toHaveBeenCalledTimes(1);
     });
   });
@@ -191,17 +179,17 @@ describe('UsersService', () => {
     it('should successfully run the .delete() function and return a number of deleted documents', async () => {
       usersRepositoryDelete.mockReturnValue(deleteCorrectResult);
 
-      await service.delete('');
+      await service.delete('_', '');
 
       expect(usersRepositoryDelete).toHaveBeenCalledWith('');
       expect(usersRepositoryDelete).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw a conflict error when update was not successful', async () => {
+    it('should throw a conflict error when delete was not successful', async () => {
       usersRepositoryDelete.mockReturnValue(0);
 
       await expect(async () => {
-        await service.delete('');
+        await service.delete('_', '');
       }).rejects.toThrow(
         new NotFoundException(
           'No documents were deleted, check if provided id is valid',
@@ -209,6 +197,17 @@ describe('UsersService', () => {
       );
       expect(usersRepositoryDelete).toHaveBeenCalledWith('');
       expect(usersRepositoryDelete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw a unprocessable entity error when trying to delete current user', async () => {
+      await expect(async () => {
+        await service.delete('', '');
+      }).rejects.toThrow(
+        new UnprocessableEntityException(
+          "You can't delete the user you are logged in as",
+        ),
+      );
+      expect(usersRepositoryDelete).toHaveBeenCalledTimes(0);
     });
   });
 });
