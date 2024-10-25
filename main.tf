@@ -18,4 +18,5 @@ resource "aws_instance" "ec2" {
   tags = {
     "Name" = "music-api"
   }
+  availability_zone = "eu-central-1a"
 }
