@@ -1,3 +1,11 @@
+variable "S3_NAME" {
+  type = string
+}
+
+variable "AWS_REGION" {
+  type = string
+}
+
 terraform {
   required_providers {
     aws = {
@@ -5,10 +13,15 @@ terraform {
       version = "~> 5.72.0"
     }
   }
+  backend "s3" {
+    bucket = var.S3_NAME
+    key    = "state/terraform.tfstate"
+    region = var.AWS_REGION
+  }
 }
 
 provider "aws" {
-  region = "eu-central-1"
+  region = var.AWS_REGION
 }
 
 resource "aws_instance" "ec2" {
