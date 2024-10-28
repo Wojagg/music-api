@@ -1,11 +1,3 @@
-variable "S3_NAME" {
-  type = string
-}
-
-variable "AWS_REGION" {
-  type = string
-}
-
 terraform {
   required_providers {
     aws = {
@@ -14,9 +6,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = var.S3_NAME
+    bucket = "bucket-name"
     key    = "state/terraform.tfstate"
-    region = var.AWS_REGION
+    region = "aws-region"
   }
 }
 
