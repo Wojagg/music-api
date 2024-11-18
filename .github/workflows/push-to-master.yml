@@ -1,5 +1,5 @@
-name: music-api-provisioning
-run-name: run terraform provisioning
+name: provisioning-and-deployment
+run-name: run terraform provisioning, build and push docker containers to ECR and deploy on ec2
 
 on:
   push:
@@ -17,6 +17,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: setup terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -38,3 +39,105 @@ jobs:
       - name: terraform apply
         id: apply
         run: terraform apply -auto-approve
+
+  build-docker-image-and-upload-to-ECR:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: build, tag, and push the service image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY_NAME: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_SERVICE }}
+        run: |
+          docker build -f music-service.Dockerfile -t $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest .
+          docker push -f music-service.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
+
+      - name: build, tag, and push the auth image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY_NAME: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_AUTH }}
+        run: |
+          docker build -f music-auth.Dockerfile -t $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest .
+          docker push -f music-auth.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
+
+      - name: build, tag, and push the redis image to ECR
+        id: build-image
+        env:
+          ECR_REGISTRY_NAME: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_REDIS }}
+        run: |
+          docker build -f redis.Dockerfile -t $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest .
+          docker push -f redis.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
+
+  run-docker-compose-on-ec2:
+    needs:
+      - build-docker-image-and-upload-to-ECR
+      - provisioning
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      - name: login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: copy docker compose file to the server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.AWS_PEM_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "~/"
+
+      - name: run docker-compose on the server
+        uses: appleboy/ssh-action@v1.1.0
+        env:
+          CACHE_PASS: ${{secrets.CACHE_PASS}}
+          CACHE_USER: ${{secrets.CACHE_USER}}
+          CACHE_PORT: ${{secrets.CACHE_PORT}}
+          DB_PASSWORD: ${{secrets.DB_PASSWORD}}
+          DB_USERNAME: ${{secrets.DB_USERNAME}}
+          DB_PORT: ${{secrets.DB_PORT}}
+          DB_HOST: ${{secrets.DB_HOST}}
+          DB_NAME: ${{secrets.DB_NAME}}
+          AUTH_DB_NAME: ${{secrets.AUTH_DB_NAME}}
+          JWT_SECRET: ${{secrets.JWT_SECRET}}
+          PASS_HASH: ${{secrets.PASS_HASH}}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
+          ECR_REPO_NAME_AUTH: ${{ secrets.ECR_REPO_NAME_AUTH }}
+          ECR_REPO_NAME_SERVICE: ${{ secrets.ECR_REPO_NAME_SERVICE }}
+          ECR_REPO_NAME_REDIS: ${{ secrets.ECR_REPO_NAME_REDIS }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.AWS_PEM_KEY }}
+          script: sudo docker-compose -f docker-compose.prod.yml up
+          envs: CACHE_PASS,CACHE_USER,CACHE_PORT,DB_PASSWORD,DB_USERNAME,DB_PORT,DB_HOST,DB_NAME,AUTH_DB_NAME,JWT_SECRET,PASS_HASH,AWS_ACCOUNT_ID,TF_VAR_AWS_REGION,ECR_REPO_NAME_AUTH,ECR_REPO_NAME_SERVICE,ECR_REPO_NAME_REDIS
