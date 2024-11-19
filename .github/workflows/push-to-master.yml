@@ -64,7 +64,7 @@ jobs:
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_SERVICE }}
         run: |
           docker build -f music-service.Dockerfile -t $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest .
-          docker push -f music-service.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
+          docker push $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
 
       - name: build, tag, and push the auth image to ECR
         id: build-and-push-auth-image
@@ -73,7 +73,7 @@ jobs:
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_AUTH }}
         run: |
           docker build -f music-auth.Dockerfile -t $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest .
-          docker push -f music-auth.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
+          docker push $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
 
       - name: build, tag, and push the redis image to ECR
         id: build-and-push-redis-image
@@ -82,7 +82,7 @@ jobs:
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_REDIS }}
         run: |
           docker build -f redis.Dockerfile -t $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest .
-          docker push -f redis.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
+          docker push $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
 
   run-docker-compose-on-ec2:
     needs:
