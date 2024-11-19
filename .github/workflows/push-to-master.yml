@@ -58,7 +58,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: build, tag, and push the service image to ECR
-        id: build-image
+        id: build-and-push-service-image
         env:
           ECR_REGISTRY_NAME: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_SERVICE }}
@@ -67,7 +67,7 @@ jobs:
           docker push -f music-service.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
 
       - name: build, tag, and push the auth image to ECR
-        id: build-image
+        id: build-and-push-auth-image
         env:
           ECR_REGISTRY_NAME: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_AUTH }}
@@ -76,7 +76,7 @@ jobs:
           docker push -f music-auth.Dockerfile $ECR_REGISTRY_NAME/$ECR_REPO_NAME:latest
 
       - name: build, tag, and push the redis image to ECR
-        id: build-image
+        id: build-and-push-redis-image
         env:
           ECR_REGISTRY_NAME: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPO_NAME: ${{ secrets.ECR_REPO_NAME_REDIS }}
