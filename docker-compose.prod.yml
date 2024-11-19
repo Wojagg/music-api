@@ -1,0 +1,51 @@
+services:
+  auth:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${TF_VAR_AWS_REGION}.amazonaws.com/${ECR_REPO_NAME_AUTH}:latest
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - '3001:3001'
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      CACHE_PASS: ${CACHE_PASS}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_NAME: ${DB_NAME}
+  api:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${TF_VAR_AWS_REGION}.amazonaws.com/${ECR_REPO_NAME_SERVICE}:latest
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - '3000:3000'
+      - '4000:4000'
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      CACHE_PASS: ${CACHE_PASS}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_NAME: ${DB_NAME}
+  mongo:
+    image: mongo:latest
+    container_name: ${DB_HOST}
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    command: mongod
+    volumes:
+      - ./infrastructure/mongo/:/docker-entrypoint-initdb.d
+      - dbPersistentVolume:/data/db
+  redis:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${TF_VAR_AWS_REGION}.amazonaws.com/${ECR_REPO_NAME_REDIS}:latest
+    ports:
+      - ${CACHE_PORT}:${CACHE_PORT}
+
+volumes:
+  dbPersistentVolume:

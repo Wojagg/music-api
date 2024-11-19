@@ -1,4 +1,4 @@
-name: music-api-tests-linter-audit
+name: tests-linter-audit
 run-name: run tests, linter, npm audit
 
 on: [pull_request]

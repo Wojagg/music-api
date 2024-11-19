@@ -22,3 +22,6 @@ npm-audit-music-auth:
 	cd ./packages/music-auth && npm audit --audit-level high
 npm-audit-music-service:
 	cd ./packages/music-service && npm audit --audit-level high
+
+terraform-provision:
+	terraform init -backend-config="bucket=$TF_VAR_S3_NAME" -backend-config="region=$TF_VAR_AWS_REGION"

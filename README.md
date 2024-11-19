@@ -44,13 +44,13 @@ DB_PORT=27017
 Run command below to set up redis, mongodb, authentication service and music service:
 
 ```bash
-sudo docker compose up
+sudo docker compose -f docker-compose.local.yml up
 ```
 
 or if you are introducing changes:
 
 ```bash
-sudo docker compose up --build
+sudo docker compose -f docker-compose.local.yml up --build
 ```
 
 Without the --build flag the images will not be rebuilt every time you ran this command and the containers will spin up
