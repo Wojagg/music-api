@@ -9,6 +9,8 @@ on:
 jobs:
   provisioning:
     runs-on: ubuntu-latest
+    outputs:
+      ec2-host: ${{ steps.set-ec2-instance-address-to-env.outputs.EC2_HOST }}
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -39,6 +41,10 @@ jobs:
       - name: terraform apply
         id: apply
         run: terraform apply -auto-approve
+
+      - name: set ec2 instance address to an environment variable to use in another job
+        id: set-ec2-instance-address-to-env
+        run: echo "EC2_HOST=$(terraform output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
 
   build-docker-image-and-upload-to-ECR:
     runs-on: ubuntu-latest
@@ -130,7 +136,7 @@ jobs:
       - name: copy docker compose and .env files to the server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ needs.provisioning.outputs.ec2-host }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
           source: "docker-compose.prod.yml,.env"
@@ -139,7 +145,7 @@ jobs:
       - name: run docker-compose on the server and remove .env file afterwards
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ needs.provisioning.outputs.ec2-host }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
           script: sudo docker compose -f docker-compose.prod.yml up -d; sudo rm .env
