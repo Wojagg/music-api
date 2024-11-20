@@ -136,10 +136,10 @@ jobs:
           source: "docker-compose.prod.yml,.env"
           target: "~/"
 
-      - name: run docker-compose on the server
+      - name: run docker-compose on the server and remove .env file afterwards
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          script: sudo docker compose -f docker-compose.prod.yml up
+          script: sudo docker compose -f docker-compose.prod.yml up -d; sudo rm .env
