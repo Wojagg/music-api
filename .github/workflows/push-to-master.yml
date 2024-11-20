@@ -107,37 +107,40 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: copy docker compose file to the server
+      - name: create env file
+        run: |
+          touch .env
+          echo CACHE_PASS=${{ secrets.CACHE_PASS }} >> .env
+          echo CACHE_USER=${{ secrets.CACHE_USER }} >> .env
+          echo CACHE_PORT=${{ secrets.CACHE_PORT }} >> .env
+          echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+          echo DB_USERNAME=${{ secrets.DB_USERNAME }} >> .env
+          echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+          echo AUTH_DB_NAME=${{ secrets.AUTH_DB_NAME }} >> .env
+          echo JWT_SECRET=${{ secrets.JWT_SECRET }} >> .env
+          echo PASS_HASH=${{ secrets.PASS_HASH }} >> .env
+          echo AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }} >> .env
+          echo TF_VAR_AWS_REGION=${{ secrets.TF_VAR_AWS_REGION }} >> .env
+          echo ECR_REPO_NAME_AUTH=${{ secrets.ECR_REPO_NAME_AUTH }} >> .env
+          echo ECR_REPO_NAME_SERVICE=${{ secrets.ECR_REPO_NAME_SERVICE }} >> .env
+          echo ECR_REPO_NAME_REDIS=${{ secrets.ECR_REPO_NAME_REDIS }} >> .env
+          cat .env
+
+      - name: copy docker compose and .env files to the server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          source: "docker-compose.prod.yml"
+          source: "docker-compose.prod.yml,.env"
           target: "~/"
 
       - name: run docker-compose on the server
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          CACHE_PASS: ${{secrets.CACHE_PASS}}
-          CACHE_USER: ${{secrets.CACHE_USER}}
-          CACHE_PORT: ${{secrets.CACHE_PORT}}
-          DB_PASSWORD: ${{secrets.DB_PASSWORD}}
-          DB_USERNAME: ${{secrets.DB_USERNAME}}
-          DB_PORT: ${{secrets.DB_PORT}}
-          DB_HOST: ${{secrets.DB_HOST}}
-          DB_NAME: ${{secrets.DB_NAME}}
-          AUTH_DB_NAME: ${{secrets.AUTH_DB_NAME}}
-          JWT_SECRET: ${{secrets.JWT_SECRET}}
-          PASS_HASH: ${{secrets.PASS_HASH}}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
-          ECR_REPO_NAME_AUTH: ${{ secrets.ECR_REPO_NAME_AUTH }}
-          ECR_REPO_NAME_SERVICE: ${{ secrets.ECR_REPO_NAME_SERVICE }}
-          ECR_REPO_NAME_REDIS: ${{ secrets.ECR_REPO_NAME_REDIS }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          script: CACHE_PASS=$CACHE_PASS CACHE_USER=$CACHE_USER CACHE_PORT=$CACHE_PORT DB_PASSWORD=$DB_PASSWORD DB_USERNAME=$DB_USERNAME DB_PORT=$DB_PORT DB_HOST=$DB_HOST DB_NAME=$DB_NAME AUTH_DB_NAME=$AUTH_DB_NAME JWT_SECRET=$JWT_SECRET PASS_HASH=$PASS_HASH AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID TF_VAR_AWS_REGION=$TF_VAR_AWS_REGION ECR_REPO_NAME_AUTH=$ECR_REPO_NAME_AUTH ECR_REPO_NAME_SERVICE=$ECR_REPO_NAME_SERVICE ECR_REPO_NAME_REDIS=$ECR_REPO_NAME_REDIS sudo docker-compose -f docker-compose.prod.yml up
-          envs: CACHE_PASS,CACHE_USER,CACHE_PORT,DB_PASSWORD,DB_USERNAME,DB_PORT,DB_HOST,DB_NAME,AUTH_DB_NAME,JWT_SECRET,PASS_HASH,AWS_ACCOUNT_ID,TF_VAR_AWS_REGION,ECR_REPO_NAME_AUTH,ECR_REPO_NAME_SERVICE,ECR_REPO_NAME_REDIS
+          script: sudo docker-compose -f docker-compose.prod.yml up
