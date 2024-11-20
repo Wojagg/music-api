@@ -22,7 +22,49 @@ resource "aws_instance" "ec2" {
   iam_instance_profile = "ec2ReadOnlyFromEcr"
   availability_zone    = "eu-central-1a"
   key_name             = "ubuntu-workstation"
+  vpc_security_group_ids = [aws_security_group.music-api.id]
   tags = {
     "Name" = "music-api"
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
+resource "aws_security_group" "music-api" {
+  name        = "music-api"
+  description = "Allow HTTPS, HTTP and SSH access"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description = "HTTPS ingress"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["83.22.251.111/32"]
+  }
+
+  ingress {
+    description = "HTTP ingress"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "SSH ingress"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
