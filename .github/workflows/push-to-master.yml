@@ -145,4 +145,4 @@ jobs:
           host: ${{ needs.provisioning.outputs.ec2-host }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          script: sudo docker compose -f docker-compose.prod.yml up -d; sudo rm .env
+          script: docker compose -f docker-compose.prod.yml up -d; sudo rm .env
