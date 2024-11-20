@@ -17,11 +17,11 @@ provider "aws" {
 }
 
 resource "aws_instance" "ec2" {
-  ami                  = "ami-00d72ec36cdfc8a0a"
-  instance_type        = "t2.micro"
-  iam_instance_profile = "ec2ReadOnlyFromEcr"
-  availability_zone    = "eu-central-1a"
-  key_name             = "ubuntu-workstation"
+  ami                    = "ami-00d72ec36cdfc8a0a"
+  instance_type          = "t2.micro"
+  iam_instance_profile   = "ec2ReadOnlyFromEcr"
+  availability_zone      = "eu-central-1a"
+  key_name               = "ubuntu-workstation"
   vpc_security_group_ids = [aws_security_group.music-api.id]
   tags = {
     "Name" = "music-api"
