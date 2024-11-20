@@ -68,3 +68,7 @@ resource "aws_security_group" "music-api" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+output "instance_ip_addr" {
+  value = aws_instance.ec2.public_ip
+}

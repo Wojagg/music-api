@@ -44,7 +44,7 @@ jobs:
 
       - name: set ec2 instance address to an environment variable to use in another job
         id: set-ec2-instance-address-to-env
-        run: echo "EC2_HOST=$(terraform output -raw instance_public_ip)" >> "$GITHUB_OUTPUT"
+        run: echo "EC2_HOST=$(terraform output -raw instance_ip_addr)" >> "$GITHUB_OUTPUT"
 
   build-docker-image-and-upload-to-ECR:
     runs-on: ubuntu-latest
