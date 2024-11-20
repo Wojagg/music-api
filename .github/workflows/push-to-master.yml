@@ -126,7 +126,6 @@ jobs:
           echo ECR_REPO_NAME_AUTH=${{ secrets.ECR_REPO_NAME_AUTH }} >> .env
           echo ECR_REPO_NAME_SERVICE=${{ secrets.ECR_REPO_NAME_SERVICE }} >> .env
           echo ECR_REPO_NAME_REDIS=${{ secrets.ECR_REPO_NAME_REDIS }} >> .env
-          cat .env
 
       - name: copy docker compose and .env files to the server
         uses: appleboy/scp-action@v0.1.7
