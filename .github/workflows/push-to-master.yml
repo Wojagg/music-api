@@ -95,21 +95,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.TF_VAR_AWS_REGION }}
-
-      - name: login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: login docker to ECR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.TF_VAR_AWS_REGION }}.amazonaws.com
-
       - name: create env file
         run: |
           touch .env
@@ -141,8 +126,12 @@ jobs:
 
       - name: run docker-compose on the server and remove .env file afterwards
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         with:
           host: ${{ needs.provisioning.outputs.ec2-host }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          script: docker compose -f docker-compose.prod.yml up -d; sudo rm .env
+          script: aws ecr get-login-password --region $TF_VAR_AWS_REGION | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$TF_VAR_AWS_REGION.amazonaws.com &&
+            sudo docker compose -f docker-compose.prod.yml up -d; sudo rm .env
