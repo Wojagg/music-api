@@ -4,7 +4,7 @@ run-name: run tests, linter, npm audit, check terraform formatting
 on: [pull_request]
 
 jobs:
-  tests-linter-npm-audit:
+  tests-linter-npm-audit-terraform-format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +25,12 @@ jobs:
 
       - name: tests all
         run: make -j 2 test-music-auth test-music-service
+
+      - name: setup terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
 
       - name: terraform format
         run: terraform fmt -check
