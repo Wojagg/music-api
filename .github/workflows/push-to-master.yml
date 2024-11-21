@@ -130,5 +130,8 @@ jobs:
           host: ${{ needs.provisioning.outputs.ec2-host }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          script: aws ecr get-login-password --region ${{ secrets.TF_VAR_AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.TF_VAR_AWS_REGION }}.amazonaws.com &&
-            sudo docker compose -f docker-compose.prod.yml up -d; sudo rm .env
+          script: aws ecr get-login-password --region ${{ secrets.TF_VAR_AWS_REGION }} |
+            sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.TF_VAR_AWS_REGION }}.amazonaws.com &&
+            sudo docker compose -f docker-compose.prod.yml pull &&
+            sudo docker compose -f docker-compose.prod.yml up -d;
+            sudo rm .env
