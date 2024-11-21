@@ -126,12 +126,9 @@ jobs:
 
       - name: run docker-compose on the server and remove .env file afterwards
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          TF_VAR_AWS_REGION: ${{ secrets.TF_VAR_AWS_REGION }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         with:
           host: ${{ needs.provisioning.outputs.ec2-host }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.AWS_PEM_KEY }}
-          script: aws ecr get-login-password --region $TF_VAR_AWS_REGION | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$TF_VAR_AWS_REGION.amazonaws.com &&
+          script: aws ecr get-login-password --region ${{ secrets.TF_VAR_AWS_REGION }} | sudo docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.TF_VAR_AWS_REGION }}.amazonaws.com &&
             sudo docker compose -f docker-compose.prod.yml up -d; sudo rm .env
