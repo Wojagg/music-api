@@ -26,9 +26,6 @@ jobs:
           terraform_version: 1.9.8
           terraform_wrapper: false
 
-      - name: terraform format
-        run: terraform fmt -check
-
       - name: terraform init
         run: terraform init -backend-config="bucket=$TF_VAR_S3_NAME" -backend-config="region=$TF_VAR_AWS_REGION"
 

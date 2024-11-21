@@ -1,25 +1,30 @@
-name: tests-linter-audit
-run-name: run tests, linter, npm audit
+name: tests-linter-audit-format-terraform
+run-name: run tests, linter, npm audit, check terraform formatting
 
 on: [pull_request]
 
 jobs:
   tests-linter-npm-audit:
-
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js
+
+      - name: setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
 
       - name: install dependencies
         run: make -j 2 install-dependencies-pipelines-music-auth install-dependencies-pipelines-music-service
-      - name: run linter all
+
+      - name: linter all
         run: make -j 2 lint-music-auth lint-music-service
-      - name: run npm audit all
+
+      - name: npm audit all
         run: make -j 2 npm-audit-music-auth npm-audit-music-service
-      - name: run tests all
+
+      - name: tests all
         run: make -j 2 test-music-auth test-music-service
+
+      - name: terraform format
+        run: terraform fmt -check
