@@ -28,10 +28,6 @@ resource "aws_instance" "ec2" {
   }
 }
 
-data "aws_vpc" "default" {
-  default = true
-}
-
 resource "aws_security_group" "music-api" {
   name        = "music-api"
   description = "Allow HTTPS, HTTP and SSH access"
@@ -61,16 +57,28 @@ resource "aws_security_group" "music-api" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "music-auth ingress"
+    from_port   = 3001
+    to_port     = 3001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "music-service ingress"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-output "instance_ip_addr" {
-  value = aws_instance.ec2.public_ip
 }
 
 resource "aws_ecr_repository" "music-api-service" {
