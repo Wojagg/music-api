@@ -80,3 +80,30 @@ resource "aws_security_group" "music-api" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_ecr_repository" "music-api-service" {
+  name                 = "wojagg/music-api-service"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+
+resource "aws_ecr_repository" "music-api-auth" {
+  name                 = "wojagg/music-api-auth"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+
+resource "aws_ecr_repository" "redis" {
+  name                 = "wojagg/redis"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
