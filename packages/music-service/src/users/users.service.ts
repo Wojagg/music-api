@@ -80,21 +80,6 @@ export class UsersService {
   }): Promise<void> {
     const { id, isActive, username, password, isAdmin } = updateData;
 
-    const fieldsToFetch = ['id'];
-
-    if (username !== undefined) {
-      fieldsToFetch.push('name');
-    }
-    if (password !== undefined) {
-      fieldsToFetch.push('pass');
-    }
-    if (isAdmin !== undefined) {
-      fieldsToFetch.push('isAdmin');
-    }
-    if (isActive !== undefined) {
-      fieldsToFetch.push('isActive');
-    }
-
     if (
       !username &&
       !password &&
@@ -102,15 +87,13 @@ export class UsersService {
       isActive === undefined
     ) {
       throw new BadRequestException(
-        'There is no properties to update, provide more properties than only id',
+        'There are no properties to update, provide more properties than only id',
       );
     }
 
-    const userToUpdate = await this.findById(fieldsToFetch, id);
-
     try {
       await this.usersRepository.update(
-        userToUpdate,
+        id,
         username,
         password,
         isAdmin,

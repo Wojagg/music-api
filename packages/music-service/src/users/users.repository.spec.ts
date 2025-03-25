@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersRepository } from './users.repository';
-import { User, UserDocument } from './user.schema';
+import { User } from './user.schema';
 import { getModelToken } from '@nestjs/mongoose';
 import { DeleteResult } from 'mongodb';
 
@@ -24,6 +24,13 @@ describe('UsersRepository', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public static async findById(id: string): Promise<User> {
       return this.entityStub;
+    }
+
+    public static async findOneAndUpdate(
+      filter: Record<string, string>,
+      update: Record<string, string>,
+    ): Promise<void> {
+      return;
     }
 
     public static async find(): Promise<User[]> {
@@ -150,13 +157,7 @@ describe('UsersRepository', () => {
     it('should successfully run the .update() function', async () => {
       findByIdSpy.mockReturnValue({});
 
-      await repository.update(
-        user as UserDocument,
-        'username',
-        'password',
-        true,
-        true,
-      );
+      await repository.update('', 'username', 'password', true, true);
       // TODO: add UserModelMock constructor testing (it seems like nestjs magic is preventing me from spying on the
       // constructor so I'm skipping it for now)
     });
