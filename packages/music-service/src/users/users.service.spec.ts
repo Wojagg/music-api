@@ -160,8 +160,6 @@ describe('UsersService', () => {
 
   describe('update', () => {
     it('should successfully run the .update() function', async () => {
-      usersRepositoryFindById.mockReturnValue({});
-
       await service.update({
         id: '',
         username: 'username',
@@ -171,7 +169,7 @@ describe('UsersService', () => {
       });
 
       expect(usersRepositoryUpdate).toHaveBeenCalledWith(
-        {},
+        '',
         'username',
         'password',
         true,
@@ -192,7 +190,7 @@ describe('UsersService', () => {
         });
       }).rejects.toThrow(new ConflictException("update wasn't successful"));
       expect(usersRepositoryUpdate).toHaveBeenCalledWith(
-        {},
+        '',
         '-',
         undefined,
         undefined,
@@ -201,7 +199,7 @@ describe('UsersService', () => {
       expect(usersRepositoryUpdate).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw a conflict error when update was not successful', async () => {
+    it('should throw a conflict error when there are no properties to update', async () => {
       usersRepositoryUpdate.mockImplementation(() => {
         throw new Error();
       });
@@ -210,7 +208,7 @@ describe('UsersService', () => {
         await service.update({ id: '' });
       }).rejects.toThrow(
         new BadRequestException(
-          'There is no properties to update, provide more properties than only id',
+          'There are no properties to update, provide more properties than only id',
         ),
       );
       expect(usersRepositoryUpdate).toHaveBeenCalledTimes(0);
