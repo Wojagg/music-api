@@ -51,19 +51,22 @@ export class UsersRepository {
   }
 
   public async update(
-    userToUpdate: UserDocument,
+    id: string,
     username?: string,
     password?: string,
     isAdmin?: boolean,
     isActive?: boolean,
   ): Promise<void> {
-    if (username !== undefined) userToUpdate.name = username;
-    if (password !== undefined)
-      userToUpdate.pass = bcrypt.hashSync(password, 10);
-    if (isActive !== undefined) userToUpdate.isActive = isActive;
-    if (isAdmin !== undefined) userToUpdate.isAdmin = isAdmin;
+    const fieldsToUpdate = {} as User;
 
-    await new this.userModel(userToUpdate).save();
+    if (username !== undefined) fieldsToUpdate.name = username;
+    if (password !== undefined)
+      fieldsToUpdate.pass = bcrypt.hashSync(password, 10);
+    if (isActive !== undefined) fieldsToUpdate.isActive = isActive;
+    if (isAdmin !== undefined) fieldsToUpdate.isAdmin = isAdmin;
+
+    const filter = { [this.idDatabaseFieldName]: id };
+    await this.userModel.findOneAndUpdate(filter, fieldsToUpdate);
   }
 
   public async delete(id: string): Promise<number> {
